@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Studio — Free QR Code Generator</title>
+<meta name="description" content="Create and download QR codes for websites, text, phone numbers and Wi-Fi.">
+<style>
+:root{--ink:#18213b;--muted:#667085;--line:#e5e7eb;--brand:#5541c7}
+*{box-sizing:border-box}body{margin:0;background:#f5f7ff;color:var(--ink);font:16px system-ui,Arial,sans-serif}
+header{background:linear-gradient(130deg,#123b8b,#7139bd);color:#fff;text-align:center;padding:38px 16px}
+header .logo{font-size:42px}header h1{margin:5px 0;font-size:32px}header p{margin:6px 0 0;opacity:.9}
+main{max-width:760px;margin:24px auto;padding:0 14px}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 5px 20px #18213b0b}
+h2{font-size:21px;margin:0 0 16px}label{display:block;font-weight:650;font-size:14px;margin:12px 0 7px}
+input,select{width:100%;padding:13px;border:1px solid #d5d9e3;border-radius:10px;background:#fff;color:#18213b;font:inherit}
+input[type=color]{width:58px;height:40px;padding:3px}
+button{border:0;border-radius:11px;padding:13px 18px;font:inherit;font-weight:700;cursor:pointer}
+.primary{background:var(--brand);color:white;width:100%;margin-top:16px}.download{background:#138b58;color:white}.download:disabled{opacity:.45;cursor:not-allowed}
+.colorrow{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+#result{min-height:240px;display:grid;place-items:center;background:#fafafa;border:1px dashed #d5d9e3;border-radius:14px;padding:12px}
+#result img{max-width:100%;height:auto}.center{text-align:center}.muted{color:var(--muted);font-size:13px}
+.ad{border:1px dashed #c8cbd6;border-radius:14px;padding:24px;text-align:center;color:#667085;background:#fff;margin:18px 0}
+#error{color:#b42318;font-size:14px;margin-top:10px}footer{text-align:center;padding:24px;color:#667085;font-size:13px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><div class="logo">▦</div><h1>QR Studio</h1><p>Create beautiful QR codes instantly — free and easy</p></header>
+<main>
+<div class="ad"><b>ADVERTISEMENT SPACE</b><br><span class="muted">Ad network placement goes here after approval</span></div>
+<section class="panel">
+<h2>Create your QR code</h2>
+<label for="type">QR type</label>
+<select id="type"><option value="url">Website URL</option><option value="text">Plain text</option><option value="phone">Phone number</option><option value="wifi">Wi-Fi network</option></select>
+<div id="normal"><label for="value">Enter information</label><input id="value" placeholder="https://example.com"></div>
+<div id="wifi" class="hidden"><label for="ssid">Wi-Fi name (SSID)</label><input id="ssid" placeholder="Your Wi-Fi name"><label for="password">Wi-Fi password</label><input id="password" placeholder="Password"></div>
+<div class="colorrow"><label for="color" style="margin:0">QR code color</label><input id="color" type="color" value="#172554"></div>
+<button class="primary" id="generate">Generate QR code</button><div id="error" role="status"></div>
+</section>
+<section class="panel center"><h2>Your QR code</h2><div id="result"><span class="muted">Your QR code will appear here</span></div><p><button class="download" id="download" disabled>Download PNG</button></p><p class="muted">Tip: Scan your QR code with another phone before sharing it.</p></section>
+<div class="ad"><b>ADVERTISEMENT SPACE</b><br><span class="muted">Second ad placement</span></div>
+</main>
+<footer>© <span id="year"></span> QR Studio · Free QR Code Generator</footer>
+<script>
+const $=id=>document.getElementById(id);let currentUrl='';
+$('year').textContent=new Date().getFullYear();
+$('type').addEventListener('change',()=>{const isWifi=$('type').value==='wifi';$('normal').classList.toggle('hidden',isWifi);$('wifi').classList.toggle('hidden',!isWifi)});
+$('generate').addEventListener('click',()=>{
+ let data=$('value').value.trim(),type=$('type').value;
+ if(type==='wifi'){const ssid=$('ssid').value.trim(),pass=$('password').value;if(!ssid){$('error').textContent='Enter your Wi-Fi name.';return}const esc=s=>s.replace(/[\\;,:"]/g,'\\$&');data=`WIFI:T:WPA;S:${esc(ssid)};P:${esc(pass)};;`}
+ else if(!data){$('error').textContent='Enter information first.';return}
+ if(type==='url'&&!/^https?:\/\//i.test(data))data='https://'+data;
+ if(type==='phone')data='tel:'+data;
+ $('error').textContent='';$('result').textContent='Generating…';$('download').disabled=true;
+ currentUrl='https://api.qrserver.com/v1/create-qr-code/?size=360x360&format=png&color='+$('color').value.slice(1)+'&data='+encodeURIComponent(data);
+ const img=new Image();img.alt='Generated QR code';img.onload=()=>{$('result').replaceChildren(img);$('download').disabled=false};img.onerror=()=>{$('result').textContent='Could not generate QR code. Check your internet connection.'};
+ img.src=currentUrl;
+});
+$('download').addEventListener('click',async()=>{try{const r=await fetch(currentUrl);if(!r.ok)throw Error();const blob=await r.blob(),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='qr-code.png';a.click();URL.revokeObjectURL(u)}catch(e){$('error').textContent='Download failed. Try long-pressing the QR image and saving it.'}});
+</script>
+</body></html>
